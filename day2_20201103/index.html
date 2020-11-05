@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="app">
+    <p :style="" :class="">{{counter}}</p>
+    <p s-text="counter"></p>
+    <p s-html="user.nameHtml"></p>
+    <button  @click="clickHandler">button</button>
+</div>
+
+<script src="./super-vue.js"></script>
+<script>
+    const app = new SuperVue({
+      el: '#app',
+      data: {
+        counter: 1,
+        user: {
+          nameHtml: '<span style="color:red; ">Super</span>'
+        }
+      }
+    })
+
+    setInterval(() => {
+      app.counter ++
+    }, 1000)
+</script>
+</body>
+</html>
