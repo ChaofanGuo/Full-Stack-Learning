@@ -1,36 +1,31 @@
 function defineReactive(obj, key, val) {
   observe(val)
+
+  const dep = new Dep()
+
   Object.defineProperty(obj, key, {
     get() {
       // console.log(`get ${key}`)
+      Dep.target && dep.addDep(Dep.target)
+
       return val
     },
     set(value) {
       // console.log(`set ${key}`)
-      observe(value)
-      val = value
-
-      // update()
+      if (value !== val) {
+        observe(value)
+        val = value
+        dep.notify()
+      }
     }
   })
 }
 
 function observe(obj) {
   if (typeof obj !== 'object' || obj === null) {
-    return
+    return obj
   }
   return new Observer(obj)
-}
-
-function proxy(vm) {
-  Object.keys(vm.$data).forEach(key => Object.defineProperty(vm, key, {
-    get() {
-      return vm.$data[key]
-    },
-    set(value) {
-      vm.$data[key] = value
-    }
-  }))
 }
 
 class Observer {
@@ -43,21 +38,39 @@ class Observer {
   }
 
   walk(obj) {
-    Object.keys(obj).forEach(key => defineReactive(obj, key, obj[key]))
+    for(let key of Object.keys(obj)) {
+      defineReactive(obj, key, obj[key])
+    }
   }
 }
 
+function proxy(vm) {
+  for(let key of Object.keys(vm.$data)) {
+    Object.defineProperty(vm, key, {
+      get() {
+        return vm.$data[key]
+      },
+      set(value) {
+        vm.$data[key] = value
+      }
+    })
+  }
+}
 
 class SuperVue {
   constructor(options) {
     this.$options = options
     this.$data = options.data
 
+    this.$methods = options.methods
+    for(let name of Object.keys(options.methods)) {
+      this[name] = options.methods[name].bind(this)
+    }
+
     observe(this.$data)
     proxy(this)
 
-    // todo: compile
-    new Compile(options.el, this)
+    this.$compile = new Compile(options.el, this)
   }
 }
 
@@ -70,42 +83,46 @@ class Compile {
   }
 
   compile(el) {
-    const childNodes = el.childNodes
-
-    childNodes.forEach(node => {
+    for(let node of el.childNodes) {
       if (node.nodeType === 1) {
         this.compileElement(node)
       } else if (this.isInter(node)) {
-        this.compileText(node)
+        node.originTextContent = node.textContent
+        this.compileText(node, RegExp.$1)
       }
 
-      if (node.childNodes) {
+      if (node.childNodes.length > 0) {
         this.compile(node)
       }
-    })
+    }
   }
 
   isInter(node) {
     return node.nodeType === 3 && /{{(.+)}}/.test(node.textContent)
   }
 
-  compileText(node) {
-    this.update(node, `this.$vm.${RegExp.$1}`, 'text')
+  compileText(node, exp) {
+    this.update(node, `this.$vm.${exp}`, 'inter')
   }
 
   compileElement(node) {
-    let nodeAttrs = node.attributes
-    Array.from(nodeAttrs).forEach(attr => {
-      const attrName = attr.name
-      const exp = attr.value
-
-      if(attrName.startsWith('s-')) {
-        const key = attrName.substr(2)
-        this[key] && this[key](node, exp)
-      } else if (attrName.startsWith(':')) {
-
+    for(const {name, value} of node.attributes) {
+      // s-text | s-html | s-model
+      if (name.startsWith('s-')) {
+        const key = name.substr(2)
+        this[key] && this[key](node, value)
       }
-    })
+      // :attr
+      else if (name.startsWith(':')) {
+        const key = name.substr(1)
+        this.attr(node, key, value)
+      }
+      // @event
+      else if (name.startsWith('@')) {
+        const event = name.substr(1)
+        this.action(node, event, this.$vm[value])
+      }
+    }
   }
 
   // s-text
@@ -120,15 +137,35 @@ class Compile {
 
   // s-model
   model(node, exp) {
+    node.addEventListener('input', event => eval(`this.$vm.${exp} = node.value`))
+    this.update(node, `this.$vm.${exp}`, 'model')
+  }
 
+  // :attr
+  attr(node, attr, exp) {
+    exp = `this.$vm.${exp}`
+    node.setAttribute(attr, eval(exp))
+    new Watcher(this.$vm, exp, val => {
+      node.setAttribute(attr, val)
+    })
+  }
+
+  // @event
+  action(node, event, fn) {
+    node.addEventListener(event, fn)
   }
 
   update(node, exp, dir) {
-    const fn = this[dir + 'Updater']
+    const fn = this[`${dir}Updater`]
     fn && fn(node, eval(exp))
-    new Watcher(this.$vm, exp, (val) => {
-      fn && fn(node, eval(exp))
+
+    new Watcher(this.$vm, exp, val => {
+      fn && fn(node, val)
     })
+  }
+
+  interUpdater(node, val) {
+    node.textContent = node.originTextContent.replace(/{{.+}}/, val)
   }
 
   textUpdater(node, val) {
@@ -138,20 +175,38 @@ class Compile {
   htmlUpdater(node, val) {
     node.innerHTML = val
   }
+
+  modelUpdater(node, val) {
+    node.value = val
+  }
 }
 
 class Watcher {
-  constructor(vm, exp, update) {
+  constructor(vm, exp, updater) {
     this.$vm = vm
-    this.exp = exp
-    this.update = update
+    this.$exp = exp
+    this.$updater = updater
+
+    Dep.target = this
+    eval(exp)
+    Dep.target = null
   }
 
   update() {
-    this.update.call(this.$vm, this.exp)
+    this.$updater.call(this.$vm, eval(this.$exp))
   }
 }
 
-class dep {
+class Dep {
+  constructor() {
+    this.deps = []
+  }
 
+  addDep(dep) {
+    this.deps.push(dep)
+  }
+
+  notify() {
+    this.deps.forEach(dep => dep.update())
+  }
 }

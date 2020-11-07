@@ -3,23 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style>
+        .bg-green {
+            background-color: yellow;
+        }
+    </style>
 </head>
 <body>
 <div id="app">
-    <p :style="" :class="">{{counter}}</p>
+    <p :style="style" :class="class">{{counter}}</p>
     <p s-text="counter"></p>
-    <p s-html="user.nameHtml"></p>
-    <button  @click="clickHandler">button</button>
+    <p s-html="user"></p>
+    <div>
+        <input s-model="input.message" type="text" />
+        <button @click="reverse">reverse</button>
+        <button @click="setStyle">set style</button>
+    </div>
+    <p>message is : {{input.message}}</p>
 </div>
 
-<script src="./super-vue.js"></script>
+<script src="super-vue.js"></script>
 <script>
     const app = new SuperVue({
       el: '#app',
       data: {
         counter: 1,
-        user: {
-          nameHtml: '<span style="color:red; ">Super</span>'
+        user: '<span style="color:red; ">Super</span>',
+        input: {
+          message: 'initial',
+        },
+        style: 'color: purple',
+        class: 'bg-green'
+      },
+      methods: {
+        setStyle() {
+          this.style = this.input.message
+        },
+        reverse() {
+          this.input.message = [...this.input.message].reverse().join('')
         }
       }
     })
