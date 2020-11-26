@@ -1,5 +1,4 @@
 // you can you up
-
 function isObject(obj) {
   return typeof obj === 'object' && obj !== null
 }
@@ -8,26 +7,20 @@ const baseHandler = {
   get(target, key) {
     const res = Reflect.get(target, key)
     console.log('get', key, res)
-
     track(target, key)
-
     return isObject(res) ? reactive(res) : res
   },
   set(target, key, value) {
     debugger
     const res = Reflect.set(target, key, value)
     console.log('set', key, res)
-
     trigger(target, key)
-
     return res
   },
   deleteProperty(target, key) {
     const res = Reflect.deleteProperty(target, key)
     console.log('del', key, res)
-
     trigger(target, key)
-
     return res
   }
 }
@@ -36,7 +29,6 @@ function reactive(obj) {
   if (typeof obj !== 'object' || obj === null) {
     return obj
   }
-
   return new Proxy(obj, baseHandler)
 }
 
@@ -59,18 +51,14 @@ function createReactiveEffect(fn) {
 }
 
 const targetMap = new WeakMap()
-
 function track(target, key) {
   const effect = effectStack[effectStack.length - 1]
-
   if (effect) {
     let depMap = targetMap.get(target)
-
     if (!depMap) {
       depMap = new Map()
       targetMap.set(target, depMap)
     }
-
     let deps = depMap.get(key)
     if (!deps) {
       deps = new Set()

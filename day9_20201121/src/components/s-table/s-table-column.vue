@@ -1,5 +1,5 @@
 <template>
-    <th v-bind="$attrs" class="s-table-header-column">{{label}}</th>
+    <th><slot></slot></th>
 </template>
 
 <script>
@@ -15,12 +15,18 @@
       },
       width: {
         type: [Number, String]
+      },
+      sortable: {
+        type: [Boolean, String]
       }
     },
-    mounted() {
-      if (this.width) {
-        this.$el.style.width = parseInt(this.width) + 'px'
+    data() {
+      return {
+        row: {}
       }
+    },
+    render(h) {
+      return h('div', this.$slots.default)
     }
   }
 </script>

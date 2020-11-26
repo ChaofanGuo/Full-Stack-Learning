@@ -2,10 +2,9 @@
   <div class="home">
     <img alt="Vue logo" src="../assets/logo.png">
     <s-table :data="list" style="width:100%">
-      <s-table-column prop="date" label="日期" sortable width="125"></s-table-column>
+      <s-table-column prop="date" label="日期" sortable width="55" @sort="() => console.log(arguments)"></s-table-column>
       <s-table-column prop="name" label="名称"></s-table-column>
       <s-table-column prop="address" label="地址"></s-table-column>
-      <s-table-column prop="actions" label="操作"></s-table-column>
     </s-table>
   </div>
 </template>
@@ -75,6 +74,14 @@ export default {
           actions: [0]
         }
       ]
+    }
+  },
+  methods: {
+    remove(item) {
+      item.delete = true
+    },
+    change(item) {
+      item.address += 1
     }
   },
   components: {
