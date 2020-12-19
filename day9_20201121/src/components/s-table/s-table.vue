@@ -148,7 +148,8 @@
 
     .sort-arrow:after {
         content: ">";
-        display: inline-block
+        display: inline-block;
+        margin-left: 10px;
     }
 
     .sort-arrow.asc:after {

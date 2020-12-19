@@ -4,6 +4,7 @@ import ReactDOM from './s-react/s-react-dom'
 import Component from './s-react/Component'
 import './index.css';
 
+/*
 function FragmentComponent(props) {
   return (
     <>
@@ -12,6 +13,7 @@ function FragmentComponent(props) {
     </>
   )
 }
+*/
 
 function FunctionComponent(props) {
   return (
@@ -25,6 +27,10 @@ class ClassComponent extends Component {
   render() {
     return (
       <div className="border">
+        <div>{this.props.name}</div>
+        <div>{this.props.name}</div>
+        <div>{this.props.name}</div>
+        <div>{this.props.name}</div>
         <div>{this.props.name}</div>
       </div>
     )
@@ -42,10 +48,6 @@ const jsx = (
       <li>Fragment</li>
       <li>Fragment1</li>
     </>
-
-    {/*<ul>*/}
-    {/*  <FragmentComponent/>*/}
-    {/*</ul>*/}
   </div>
 )
 

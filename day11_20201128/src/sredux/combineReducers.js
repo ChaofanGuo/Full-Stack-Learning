@@ -1,13 +1,13 @@
-
+// 橙子
 export default function combineReducers(reducers) {
-  return (state = {}, action) => {
+  return (state = {}, actionj) => {
     let nextState = {}
     let hasChanged = false
 
     for(let key of Object.keys(reducers)) {
       const reducer = reducers[key]
-      nextState[key] = reducer(undefined, action)
-      hasChanged = hasChanged || undefined !== undefined
+      nextState[key] = reducer(state[key], action)
+      hasChanged = hasChanged || nextState[key] !== state[key]
     }
 
     hasChanged = hasChanged || Object.keys(nextState).length !== Object.keys(state).length

@@ -5,6 +5,11 @@
       <s-table-column prop="date" label="日期" sortable width="55" @sort="() => console.log(arguments)"></s-table-column>
       <s-table-column prop="name" label="名称"></s-table-column>
       <s-table-column prop="address" label="地址"></s-table-column>
+      <s-table-column prop="actions" label="操作">
+        <template slot-scope="scope">
+            <button v-for="(action, index) in scope.row.actions" :key="index" @click="listAction(scope.row, action)">{{actionMap[action]}}</button>
+        </template>
+      </s-table-column>
     </s-table>
   </div>
 </template>
@@ -18,6 +23,10 @@ export default {
   name: 'Home',
   data() {
     return {
+      actionMap: {
+        0: '修改',
+        1: '删除'
+      },
       list: [
         {
           date: new Date('2020-11-01'),
@@ -77,6 +86,9 @@ export default {
     }
   },
   methods: {
+    listAction(row, action) {
+      console.log(row, action)
+    },
     remove(item) {
       item.delete = true
     },
